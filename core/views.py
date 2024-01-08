@@ -220,6 +220,8 @@ def submit_trip(request):
             submit_status=True
         )
 
+        print("Balance amount", amount - float(trip_body['trip_data']['dieselAmount']) - int(trip_body['trip_data']['adBlue']) - int(trip_body['trip_data']['maintanance']))
+
         get_vehicle = list(Trip.objects.filter(id=trip_body['tripId']).values('vehicle_id'))
 
         Vehicle.objects.filter(registration_number=get_vehicle[0]['vehicle_id']).update(
@@ -362,7 +364,8 @@ def truck_vitals(request):
                 'balance_amount', 
                 'maintanance', 
                 'diesel_amount',
-                'ad_blue'
+                'ad_blue',
+                'reading'
             ).order_by('trip_date')
         )
         trip_ids = []
@@ -370,6 +373,7 @@ def truck_vitals(request):
         maintanance= 0
         diesel_amount = 0
         ad_blue = 0
+        reading = 0
 
         for trip in vitals_from_trip:
             trip_ids.append(trip['id'])
@@ -377,6 +381,7 @@ def truck_vitals(request):
             maintanance += trip['maintanance']
             diesel_amount += trip['diesel_amount']
             ad_blue += trip['ad_blue']
+            reading = trip['reading']
 
         print('count of trips', len(trip_ids))
 
@@ -430,7 +435,7 @@ def truck_vitals(request):
             'Frieght Amount':freight,
             'Total Expenditure': loading + unloading + toll_gate + rto_pcl + diesel_amount + ad_blue + driver_amount, 
             'EMI': None,
-            'Kilometers': None,
+            'Kilometers': reading,
             'Maintenance': maintanance,
             'Quantity': quantity,
             'Balance': balance,

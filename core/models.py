@@ -222,6 +222,7 @@ class Trip(models.Model):
     maintanance = models.FloatField(default=0)
 
 
+
     class Meta:
         db_table = 'trip'
 
