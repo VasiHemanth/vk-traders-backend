@@ -107,7 +107,7 @@ vital_detials_config = [
     "details": False
     },
     {
-    "title": "Maintenance",
+    "title": "Maintanance",
     "value": "",
     "description": "",
     "icon": "/maintenance.svg",

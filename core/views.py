@@ -438,7 +438,7 @@ def truck_vitals(request):
             'Total Expenditure': loading + unloading + toll_gate + rto_pcl + diesel_amount + ad_blue + driver_amount, 
             'EMI': None,
             'Kilometers': reading,
-            'Maintenance': maintanance,
+            'Maintanance': maintanance,
             'Quantity': quantity,
             'Balance': balance,
         })
