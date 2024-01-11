@@ -13,7 +13,7 @@ from .models import *
 from .serializers import * 
 
 from .utils.trip_utils import *
-from .utils.helper import get_monthYear_range
+from .utils.helper import get_monthYear_range, get_last_six_monthYear, get_strp_time
 # Vercel static files
 from datetime import datetime
 from django.http import HttpResponse
@@ -332,6 +332,7 @@ def order_data(request):
     
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated]) 
 def all_trucks(request):
     try:
         get_all_trucks = Vehicle.objects.all().values('registration_number').order_by('id')
@@ -349,6 +350,7 @@ def all_trucks(request):
         return Response({'error': e}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 @api_view(['GET'])
+@permission_classes([IsAuthenticated]) 
 def truck_vitals(request):
     vehicle_id = request.GET.get('truck_id')
     monthYear = request.GET.get('monthYear')
@@ -445,3 +447,87 @@ def truck_vitals(request):
         return Response([vitals, recent_deliveries], status=status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated]) 
+def chartData(request):
+    source = request.GET.get('source')
+    vehicle_id = request.GET.get('truck_id')
+    monthYear = request.GET.get('monthYear')
+
+    try:
+        get_six_months = get_last_six_monthYear(monthYear)
+        labels = []
+        values= []
+
+        for month_year in get_six_months:
+            start_date, end_date = get_monthYear_range(month_year)
+
+            if source != "quantity":
+                column = None
+                if source == "maintanance":
+                    column = "maintanance"
+                elif source == "balance_amount":
+                    column = "balance_amount"
+
+                source_data = list(Trip.objects.filter(
+                    vehicle_id=vehicle_id,
+                    trip_date__range=(start_date, end_date),
+                    submit_status=True).values(
+                        'id', 
+                        column                 
+                    ).order_by('trip_date')
+                )
+
+                column_value = 0
+                for src_data in source_data:
+                    column_value += src_data[column]
+                
+                labels.append(get_strp_time(month_year)) 
+                values.append(column_value)
+         
+            else:
+                trip_ids = []
+                source_data = list(Trip.objects.filter(
+                    vehicle_id=vehicle_id,
+                    trip_date__range=(start_date, end_date),
+                    submit_status=True).values(
+                        'id',                  
+                    ).order_by('trip_date')
+                )
+           
+                for src_data in source_data:
+                    trip_ids.append(src_data['id'])
+
+                order_ids_associated_with_trip_ids = list(OrderToTripMapping.objects.filter(
+                    trip_id__in=trip_ids
+                ).values('order_id'))
+                
+                order_ids = [order['order_id'] for order in order_ids_associated_with_trip_ids]
+
+                quantity_from_orders = list(Order.objects.filter(
+                    id__in=order_ids, 
+                    order_submit_status=True
+                ).values(
+                    'quantity'
+                ))
+
+                quantity = 0
+                for order_detail in quantity_from_orders:
+                    quantity += order_detail['quantity']
+
+                labels.append(get_strp_time(month_year)) 
+                values.append(quantity)
+
+        response = {
+            'column': source,
+            'labels' : labels,
+            'values': values
+        }
+        
+        return Response(response, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+

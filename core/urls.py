@@ -10,7 +10,6 @@ from rest_framework_simplejwt.views import (
 
 urlpatterns = [
     
-
     # Authentication and Authorization
     path('token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
@@ -21,7 +20,6 @@ urlpatterns = [
     path('vehicle-data', views.get_vehicle_data, name='vehicle data + associated trip dates'),
     path('search', views.search, name='search'),
    
-
     # Trip
     path('create-trip', views.create_trip, name='active vehicles + create trip'),
     path('submit-trip', views.submit_trip, name='submit trip'),
@@ -34,7 +32,6 @@ urlpatterns = [
 
     # Truck Dashboard 
     path('all-trucks', views.all_trucks, name="get all trucks"),
-    path('truck-vitals', views.truck_vitals, name="get all trucks"),
-
-
+    path('truck-vitals', views.truck_vitals, name="trucks vitals"),
+    path('chart-data', views.chartData, name="Chart data"),
 ]

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import calendar
 
 def number_with_commas(value, decimal=True):
@@ -22,3 +22,25 @@ def get_monthYear_range(monthYear):
     print("start date", "end date", start_datetime, end_datetime)
 
     return start_datetime, end_datetime
+
+def get_last_six_monthYear(monthYear):
+    input_date = datetime.strptime(monthYear, '%Y-%m')
+
+    # Calculate the start date of the last 6 months
+    start_date = input_date - timedelta(days=input_date.day - 1)
+    start_date -= timedelta(days=180)
+
+    # Generate a list of the last 6 months
+    last_six_months = [(start_date + timedelta(days=30 * i)).strftime('%Y-%m') for i in range(6)]
+
+    last_six_months.append(monthYear)
+
+    return last_six_months
+
+def get_strp_time(montYear):
+    input_date = datetime.strptime(montYear, '%Y-%m')
+
+    # Convert to the desired format 'Month YYYY'
+    formatted_date = input_date.strftime('%b %Y')
+
+    return formatted_date
