@@ -71,3 +71,13 @@ def vitals_data_config(vitals):
 
     return vitals_config
 
+
+def expenses_data_config(expenses):
+    expenses_config = copy.deepcopy(total_expenditure_config)
+    for expense in expenses_config:
+        expense['value'] = expenses[expense['label']]
+            
+
+    return expenses_config
+        
+        

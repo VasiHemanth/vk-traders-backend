@@ -443,8 +443,19 @@ def truck_vitals(request):
             'Balance': balance,
         })
         # print("vitals", vitals)
+        total_expenses = expenses_data_config({
+            'Loading': loading,
+            'UnLoading': unloading,
+            'Toll Gate': toll_gate,
+            'RTO & PC': rto_pcl,
+            'Diesel Amount': diesel_amount,
+            'AdBlue': ad_blue,
+            'Driver Amount': driver_amount
+        })
+        
+       
 
-        return Response([vitals, recent_deliveries], status=status.HTTP_200_OK)
+        return Response([vitals, recent_deliveries, total_expenses], status=status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

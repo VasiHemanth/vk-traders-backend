@@ -19,7 +19,6 @@ def get_monthYear_range(monthYear):
     # Convert strings to datetime objects
     start_datetime = datetime.strptime(start_date_string, "%Y-%m-%d %H:%M:%S")
     end_datetime = datetime.strptime(end_date_string, "%Y-%m-%d %H:%M:%S")
-    print("start date", "end date", start_datetime, end_datetime)
 
     return start_datetime, end_datetime
 

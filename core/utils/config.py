@@ -111,7 +111,7 @@ vital_detials_config = [
     "value": "",
     "description": "",
     "icon": "/maintenance.svg",
-    "details": True,
+    "details": False,
     "color": "",
     },{
     "title": "Quantity",
@@ -129,4 +129,20 @@ vital_detials_config = [
     "details": False,
     "color": "",
     },
+]
+
+total_expenditure_config = [
+    { "label": "Loading", "value": "N/A" },
+    { "label": "UnLoading", "value":"N/A" },
+    { "label": "Toll Gate", "value": "N/A" },
+    { "label": "RTO & PC", "value": "N/A" },
+    {
+        "label": "Diesel Amount",
+        "value": "N/A" 
+    },
+    {
+        "label": "AdBlue",
+        "value": "N/A"
+    },
+    { "label": "Driver Amount", "value": "N/A" },
 ]
