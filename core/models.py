@@ -186,6 +186,8 @@ class Order(models.Model):
     order_submit_status = models.BooleanField(default=False)
     updated_at = models.DateTimeField(auto_now=True)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    gst = models.BooleanField(default=False)
+    gst_amount = models.IntegerField(default=0)
 
     class Meta:
         db_table = 'order'
@@ -220,8 +222,6 @@ class Trip(models.Model):
     balance_amount = models.FloatField(blank=True, null=True)
     diesel_per_litre = models.FloatField(blank=True, null=True)
     maintanance = models.FloatField(default=0)
-
-
 
     class Meta:
         db_table = 'trip'

@@ -285,6 +285,10 @@ def submit_order_data(request):
         elif request.method == "POST":
             submit_order_body = request.data
 
+            gst_amount = 0
+            if(submit_order_body['order_data']['gst'] == True):
+                gst_amount = round(submit_order_body['order_data']['freightAmount']) * 0.12 
+
             Order.objects.filter(id=submit_order_body['id']).update(
                 loading= int(submit_order_body['order_data']['loading']),
                 unloading= int(submit_order_body['order_data']['unloading']),
@@ -296,6 +300,8 @@ def submit_order_data(request):
                 driver_freight= int(submit_order_body['order_data']['driverFreight']),
                 driver_amount= int(submit_order_body['order_data']['driverAmount']),
                 order_submit_status= True,
+                gst = submit_order_body['order_data']['gst'],
+                gst_amount = gst_amount
             )
 
             get_submitted_order = Order.objects.get(id=submit_order_body['id'])
@@ -417,6 +423,7 @@ def truck_vitals(request):
         driver_amount=0
         recent_deliveries = []
         for order_detail in vitals_from_order:
+            print("order_detials date", order_detail['date'])
             quantity += order_detail['quantity']
             freight += order_detail['freight_amount'] if order_detail['freight_amount'] != None else 0
             loading += order_detail['loading']
