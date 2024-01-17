@@ -69,7 +69,7 @@ def logout(request):
 @permission_classes([IsAuthenticated])
 def all_vehicles(request):
     try:
-        get_vehicles = list(Vehicle.objects.all().values('id', "registration_number", 'company', 'driver_name', 'status').order_by("id"))
+        get_vehicles = list(Vehicle.objects.all().values("registration_number", 'company', 'driver_name', 'status').order_by("registration_number"))
         return Response(get_vehicles, status=status.HTTP_200_OK)
         
     except Exception as e:
@@ -84,7 +84,7 @@ def get_vehicle_data(request):
     try:
         vehicle_details = Vehicle.objects.get(registration_number=vehicle_id)
         serializer = VehicleSerializer(vehicle_details)
-        trip_dates = list(Trip.objects.filter(vehicle_id=vehicle_id).values('id', 'trip_date', 'no_of_trips').order_by('trip_date'))
+        trip_dates = list(Trip.objects.filter(vehicle_id=vehicle_id).values('id', 'trip_date', 'no_of_trips', 'submit_status').order_by('trip_date'))
         return Response({"vehicle_details": serializer.data, 'trip_dates':trip_dates}, status=status.HTTP_200_OK)
     except Exception as e:
         print(e)
@@ -215,12 +215,13 @@ def submit_trip(request):
             diesel_amount= float(trip_body['trip_data']['dieselAmount']),
             mileage= float(trip_body['trip_data']['mileage']),
             ad_blue= float(trip_body['trip_data']['adBlue']),
-            maintanance= float(trip_body['trip_data']['maintanance']),
-            balance_amount= amount - float(trip_body['trip_data']['dieselAmount']) - int(trip_body['trip_data']['adBlue']) - int(trip_body['trip_data']['maintanance']),
+            # maintanance= float(trip_body['trip_data']['maintanance']),
+            # balance_amount= amount - float(trip_body['trip_data']['dieselAmount']) - int(trip_body['trip_data']['adBlue']) - int(trip_body['trip_data']['maintanance']),
+            balance_amount= amount - float(trip_body['trip_data']['dieselAmount']) - int(trip_body['trip_data']['adBlue']),
             submit_status=True
         )
 
-        print("Balance amount", amount - float(trip_body['trip_data']['dieselAmount']) - int(trip_body['trip_data']['adBlue']) - int(trip_body['trip_data']['maintanance']))
+        print("Balance amount", amount - float(trip_body['trip_data']['dieselAmount']) - int(trip_body['trip_data']['adBlue']))
 
         get_vehicle = list(Trip.objects.filter(id=trip_body['tripId']).values('vehicle_id'))
 
@@ -341,7 +342,7 @@ def order_data(request):
 @permission_classes([IsAuthenticated]) 
 def all_trucks(request):
     try:
-        get_all_trucks = Vehicle.objects.all().values('registration_number').order_by('id')
+        get_all_trucks = Vehicle.objects.all().values('registration_number').order_by('registration_number')
 
         # vehicles = []
         # for vehicle in get_all_trucks:
@@ -370,7 +371,6 @@ def truck_vitals(request):
                 'vehicle_id', 
                 'trip_date', 
                 'balance_amount', 
-                'maintanance', 
                 'diesel_amount',
                 'ad_blue',
                 'reading'
@@ -378,7 +378,7 @@ def truck_vitals(request):
         )
         trip_ids = []
         balance = 0
-        maintanance= 0
+     
         diesel_amount = 0
         ad_blue = 0
         reading = 0
@@ -386,7 +386,7 @@ def truck_vitals(request):
         for trip in vitals_from_trip:
             trip_ids.append(trip['id'])
             balance += trip['balance_amount']
-            maintanance += trip['maintanance']
+          
             diesel_amount += trip['diesel_amount']
             ad_blue += trip['ad_blue']
             reading = trip['reading']
@@ -445,7 +445,7 @@ def truck_vitals(request):
             'Total Expenditure': loading + unloading + toll_gate + rto_pcl + diesel_amount + ad_blue + driver_amount, 
             'EMI': None,
             'Kilometers': reading,
-            'Maintanance': maintanance,
+            'Maintenance': 'NA',
             'Quantity': quantity,
             'Balance': balance,
         })
@@ -459,8 +459,6 @@ def truck_vitals(request):
             'AdBlue': ad_blue,
             'Driver Amount': driver_amount
         })
-        
-       
 
         return Response([vitals, recent_deliveries, total_expenses], status=status.HTTP_200_OK)
     except Exception as e:
@@ -484,9 +482,7 @@ def chartData(request):
 
             if source != "quantity":
                 column = None
-                if source == "maintanance":
-                    column = "maintanance"
-                elif source == "balance_amount":
+                if source == "balance_amount":
                     column = "balance_amount"
 
                 source_data = list(Trip.objects.filter(

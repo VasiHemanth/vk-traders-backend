@@ -221,15 +221,13 @@ class Trip(models.Model):
     submit_status = models.BooleanField(default=False)
     balance_amount = models.FloatField(blank=True, null=True)
     diesel_per_litre = models.FloatField(blank=True, null=True)
-    maintanance = models.FloatField(default=0)
 
     class Meta:
         db_table = 'trip'
 
 
 class Vehicle(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    registration_number = models.CharField()  # The composite primary key (registration_number, id) found, that is not supported. The first column is selected.
+    registration_number = models.CharField(primary_key=True, max_length=15, unique=True)  # The composite primary key (registration_number, id) found, that is not supported. The first column is selected.
     company = models.CharField(blank=False, null=False)
     chassis_number = models.CharField(blank=True, null=True)
     insurance = models.DateField(blank=True, null=True)
@@ -244,4 +242,15 @@ class Vehicle(models.Model):
     class Meta:
         db_table = 'vehicle'
         # unique_together = (('registration_number', 'id'),)
+
+
+class Maintenance(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    vehicle_id = models.ForeignKey('Vehicle', models.DO_NOTHING)
+    maintenance_date = models.DateField(blank=False, null=False, db_comment='Maintenance activity registered date')
+    maintenance_name = models.CharField(blank=False, null=False)
+    charges = models.FloatField(blank=False, null=False)
+
+    class Meta:
+        db_table = 'maintenance'
 

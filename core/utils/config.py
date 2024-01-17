@@ -1,5 +1,5 @@
 
-trip_metrics_key = ['reading', 'kilometers', 'diesel', 'diesel_amount', 'ad_blue', 'maintanance', 'mileage', 'balance_amount']
+trip_metrics_key = ['reading', 'kilometers', 'diesel', 'diesel_amount', 'ad_blue', 'maintenance', 'mileage', 'balance_amount']
 
 trip_metrics_config = [
     {
@@ -23,7 +23,7 @@ trip_metrics_config = [
         "value": "N/A"
     },
     {
-        "label": "Maintanance",
+        "label": "Maintenance",
         "value": "N/A" 
     },
     {
@@ -107,7 +107,7 @@ vital_detials_config = [
     "details": False
     },
     {
-    "title": "Maintanance",
+    "title": "Maintenance",
     "value": "",
     "description": "",
     "icon": "/maintenance.svg",
