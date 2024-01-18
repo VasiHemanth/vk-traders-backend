@@ -77,7 +77,38 @@ def expenses_data_config(expenses):
     for expense in expenses_config:
         expense['value'] = expenses[expense['label']]
             
-
     return expenses_config
+
+def maintenance_config(maintenance):
+    monthYear = []
+    activities= []
+  
+    for service in maintenance:
+        formatted_monthYear = service['maintenance_date'].strftime("%B %Y")
+        if formatted_monthYear not in monthYear:
+            monthYear.append(formatted_monthYear)
+            activities.append({
+                formatted_monthYear: [
+                    {
+                        'activity_name': service['maintenance_name'],
+                        'charges' : service['charges']
+                    }
+                ]
+            })
+            
+        else:
+            for activity in activities:
+                if formatted_monthYear in activity:
+                    activity[formatted_monthYear].append({
+                        'activity_name': service['maintenance_name'],
+                        'charges' : service['charges']
+                    })
+    
+    return {
+        'monthYear': monthYear,
+        'activities': activities
+    }
+
+      
         
         

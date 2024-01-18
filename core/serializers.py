@@ -16,3 +16,8 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model=Order
         fields='__all__'
+
+class MaintenanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Maintenance
+        fields='__all__'

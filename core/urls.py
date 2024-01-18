@@ -30,8 +30,13 @@ urlpatterns = [
     path('submit-order-data', views.submit_order_data, name='submit order data'),
     path('order-data', views.order_data, name='order data'),
 
+    # Maintenance
+    path('maintenance-data', views.maintenance_data, name='maintenance data'),
+
+
     # Truck Dashboard 
     path('all-trucks', views.all_trucks, name="get all trucks"),
     path('truck-vitals', views.truck_vitals, name="trucks vitals"),
     path('chart-data', views.chartData, name="Chart data"),
+
 ]

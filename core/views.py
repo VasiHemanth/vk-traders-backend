@@ -109,8 +109,6 @@ def search(request):
 def get_trip_data(request):
     trip_id = request.GET.get('tripId')
 
-    # print(trip_id)
-
     try:
         trip_data = Trip.objects.get(id=trip_id)
         serializer = TripSerializer(trip_data)
@@ -544,4 +542,44 @@ def chartData(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['GET', 'POST'])
+def maintenance_data(request):
+    try:
+        if request.method == "GET":
+            vehicle_id = request.GET.get('vehicle_id')
 
+            maintenance_details = list(Maintenance.objects.filter(
+                vehicle_id__registration_number = vehicle_id
+            ).values('id', 'maintenance_date', 'maintenance_name', 'charges').order_by('-maintenance_date'))
+
+            maintenance =  maintenance_config(maintenance_details)
+
+            return Response(maintenance, status=status.HTTP_200_OK)
+        elif request.method == "POST":
+            maintenance_body = request.data
+
+            print(maintenance_body)
+
+            vehicle_instance = Vehicle.objects.get(registration_number=maintenance_body['vehicle_id'])
+
+            print("instance", vehicle_instance)
+
+            service_name= Maintenance.objects.create(
+                vehicle_id= vehicle_instance,
+                maintenance_date=maintenance_body['maintenance_date'],
+                maintenance_name=maintenance_body['activity_name'],
+                charges=maintenance_body['charges']
+            )
+
+            return_response = {}
+            if service_name.id:
+                return_response['id'] = service_name.id
+                return_response['message'] = 'New Maintenance activity added'
+
+            return Response(return_response, status=status.HTTP_200_OK)
+
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    
