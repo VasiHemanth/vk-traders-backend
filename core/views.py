@@ -376,7 +376,6 @@ def truck_vitals(request):
         )
         trip_ids = []
         balance = 0
-     
         diesel_amount = 0
         ad_blue = 0
         reading = 0
@@ -384,20 +383,24 @@ def truck_vitals(request):
         for trip in vitals_from_trip:
             trip_ids.append(trip['id'])
             balance += trip['balance_amount']
-          
             diesel_amount += trip['diesel_amount']
             ad_blue += trip['ad_blue']
             reading = trip['reading']
 
-        print('count of trips', len(trip_ids))
+        vehicle_instance = Vehicle.objects.get(registration_number=vehicle_id)
+        # print(str(start_date), type(start_date))
+        maintenance = list(Maintenance.objects.filter(
+            vehicle_id=vehicle_instance,
+            maintenance_date__range=(start_date, end_date),
+        ).values( 'maintenance_name', 'charges'))
 
+        maintenance_charges, total_maintenance = maintenance_data_config(maintenance)
+        
         order_ids_associated_with_trip_ids = list(OrderToTripMapping.objects.filter(
             trip_id__in=trip_ids
         ).values('order_id'))
 
         order_ids = [order['order_id'] for order in order_ids_associated_with_trip_ids]
-
-        print('count of orders', len(order_ids))
 
         vitals_from_order = list(Order.objects.filter(id__in=order_ids, order_submit_status=True).values(
             'date', 
@@ -443,9 +446,9 @@ def truck_vitals(request):
             'Total Expenditure': loading + unloading + toll_gate + rto_pcl + diesel_amount + ad_blue + driver_amount, 
             'EMI': None,
             'Kilometers': reading,
-            'Maintenance': 'NA',
+            'Maintenance': maintenance_charges,
             'Quantity': quantity,
-            'Balance': balance,
+            'Balance': balance - maintenance_charges,
         })
         # print("vitals", vitals)
         total_expenses = expenses_data_config({
@@ -458,7 +461,7 @@ def truck_vitals(request):
             'Driver Amount': driver_amount
         })
 
-        return Response([vitals, recent_deliveries, total_expenses], status=status.HTTP_200_OK)
+        return Response([vitals, recent_deliveries, total_expenses, total_maintenance], status=status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -479,26 +482,37 @@ def chartData(request):
             start_date, end_date = get_monthYear_range(month_year)
 
             if source != "quantity":
-                column = None
-                if source == "balance_amount":
-                    column = "balance_amount"
-
-                source_data = list(Trip.objects.filter(
-                    vehicle_id=vehicle_id,
-                    trip_date__range=(start_date, end_date),
-                    submit_status=True).values(
-                        'id', 
-                        column                 
-                    ).order_by('trip_date')
-                )
-
-                column_value = 0
-                for src_data in source_data:
-                    column_value += src_data[column]
-                
                 labels.append(get_strp_time(month_year)) 
-                values.append(column_value)
-         
+
+                # Total Maintenance charges for particular month
+                vehicle_instance = Vehicle.objects.get(registration_number=vehicle_id)
+                maintenance = list(Maintenance.objects.filter(
+                    vehicle_id=vehicle_instance,
+                    maintenance_date__range=(start_date, end_date),
+                ).values( 'maintenance_name', 'charges'))
+                
+                maintenance_charges = 0
+                for charge in maintenance:
+                    maintenance_charges += charge['charges']
+                
+                if source == "balance_amount":
+                    source_data = list(Trip.objects.filter(
+                        vehicle_id=vehicle_id,
+                        trip_date__range=(start_date, end_date),
+                        submit_status=True).values(
+                            'id', 
+                            'balance_amount'                 
+                        ).order_by('trip_date')
+                    )
+
+                    column_value = 0
+                    for src_data in source_data:
+                        column_value += src_data['balance_amount' ]
+    
+                    values.append(column_value - maintenance_charges)
+                elif source == "maintenance":
+                    values.append(maintenance_charges)
+
             else:
                 trip_ids = []
                 source_data = list(Trip.objects.filter(
@@ -533,7 +547,7 @@ def chartData(request):
                 values.append(quantity)
 
         response = {
-            'column': source,
+            'column': source.capitalize(),
             'labels' : labels,
             'values': values
         }

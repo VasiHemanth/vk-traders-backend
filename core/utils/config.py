@@ -111,7 +111,7 @@ vital_detials_config = [
     "value": "",
     "description": "",
     "icon": "/maintenance.svg",
-    "details": False,
+    "details": True,
     "color": "",
     },{
     "title": "Quantity",

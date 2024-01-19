@@ -109,6 +109,17 @@ def maintenance_config(maintenance):
         'activities': activities
     }
 
-      
+
+def maintenance_data_config(services):
+    maintenance = []
+    total_maintenance = 0
+    for service in services:
+        maintenance.append({
+            'label': service['maintenance_name'],
+            'value': service['charges']
+        })
+        total_maintenance += service['charges']
+
+    return total_maintenance, maintenance
         
         
