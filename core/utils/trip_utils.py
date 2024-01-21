@@ -47,7 +47,6 @@ def order_data_config(order_data):
         return order_details
     else:
         order_details_data = order_details[0:7]
-        print("order_details", order_details_data)
         for index, detail in enumerate(order_details_key_):
             if detail=='advance':
                 order_details_data[index]['value'] = "₹" + number_with_commas(order_data[detail])
@@ -123,3 +122,96 @@ def maintenance_data_config(services):
     return total_maintenance, maintenance
         
         
+
+def entire_trip_details_data_config(trips, order_to_trips, orders):
+    all_trips = {
+        'column_names': entire_trip_column_names,
+        'column_values': [],
+        'row_span': [],
+        'total': {},
+    }
+        
+    trip_totals = copy.deepcopy(total_trip_details)
+    for order in orders:
+        trip_detail = copy.deepcopy(each_trip_details)
+        for trip_order in order_to_trips:
+            if str(order['id']) == trip_order['order_id']:
+                for trip in trips:
+                    if str(trip['id']) == trip_order['trip_id']:
+                        if trip['trip_date'].date() == order['date'].date():
+                            trip_detail['READING'] = trip['reading']
+
+                            trip_detail['KMS'] = trip['kilometers']
+                            trip_totals['KMS'] += trip['kilometers']
+
+                            trip_detail['DIESEL'] = trip['diesel']
+                            trip_totals['DIESEL'] += trip['diesel']
+                            
+                            trip_detail['DIESEL AMT'] = trip['diesel_amount']
+                            trip_totals['DIESEL AMT'] += trip['diesel_amount']
+                            
+                            trip_detail['MILEAGE'] = trip['mileage']
+                            trip_totals['MILEAGE'] += trip['mileage']
+
+                            trip_detail['ADBLUE'] = trip['ad_blue']
+                            trip_totals['ADBLUE'] += trip['ad_blue']
+
+                            trip_detail['BALANCE AMT'] = trip['balance_amount']
+                            trip_totals['BALANCE AMT'] += trip['balance_amount']
+
+                            all_trips['row_span'].append(trip['no_of_trips'])
+                        else:
+                            all_trips['row_span'].append(None)
+
+                        trip_detail['DATE'] = order['date'].date()
+                        # print("excuted trip_detail", trip_detail)
+        trip_detail['FROM'] = order['from_field']
+        trip_detail['TO'] = order['to']
+
+        trip_detail['QTY'] = order['quantity']
+        trip_totals['QTY'] += order['quantity']
+
+        trip_detail['ADVANCE'] = order['advance']
+        trip_totals['ADVANCE'] += int(order['advance'])
+
+        trip_detail['LOADING'] = order['loading']
+        trip_totals['LOADING'] += order['loading']
+
+        trip_detail['UNLOADING'] = order['unloading'] 
+        trip_totals['UNLOADING'] += order['unloading']
+
+        trip_detail['TOLLGATE'] = order['toll_gate']
+        trip_totals['TOLLGATE'] += order['toll_gate']
+
+        trip_detail['RTO & PC'] = order['rto_pcl'] 
+        trip_totals['RTO & PC'] += order['rto_pcl']
+
+        trip_detail['FREIGHT'] = order['freight']
+        trip_totals['FREIGHT'] += order['freight']
+
+        trip_detail['FRIEGHT AMT'] = order['freight_amount']
+        trip_totals['FRIEGHT AMT'] += order['freight_amount']
+
+        trip_detail['DRIVER FRIEGHT'] = order['driver_freight']
+        trip_totals['DRIVER FRIEGHT'] += order['driver_freight']
+
+        trip_detail['DRIVER AMT'] = order['driver_amount']
+        trip_totals['DRIVER AMT'] += order['driver_amount']
+
+        trip_detail['GST'] = order['gst_amount']
+        trip_totals['GST'] += order['gst_amount']
+
+        all_trips['column_values'].append(trip_detail)                    
+
+    print('entire trips', all_trips['column_values'])
+
+    trip_totals['FREIGHT'] = trip_totals['FREIGHT'] / len(all_trips['column_values'])
+    trip_totals['DRIVER FRIEGHT'] = trip_totals['DRIVER FRIEGHT'] / len(all_trips['column_values'])
+    trip_totals['MILEAGE'] = trip_totals['MILEAGE'] / len(trips)
+
+    print("trip totals", trip_totals)
+
+    all_trips['total'] = trip_totals
+
+
+    return all_trips

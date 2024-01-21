@@ -146,3 +146,61 @@ total_expenditure_config = [
     },
     { "label": "Driver Amount", "value": "N/A" },
 ]
+
+entire_trip_column_names =['DATE', 'FROM', 'TO', 'QTY', 'ADVANCE', 'LOADING', 'UNLOADING', 
+    'RTO & PC', 'TOLLGATE', 'READING', 'KMS', 'DIESEL', 'DIESEL AMT', 'ADBLUE',
+    'MILEAGE', 'FREIGHT', 'FRIEGHT AMT','DRIVER FRIEGHT', 'DRIVER AMT',
+    'BALANCE AMT', 'GST AMT'
+]
+
+each_trip_details = {
+    'DATE': 'N/A',
+    "FROM": "N/A",
+    "TO": "N/A",
+    "QTY": "N/A",
+    "ADVANCE": "N/A",
+    "LOADING": "N/A",
+    "UNLOADING": "N/A",
+    "TOLLGATE": "N/A",
+    "RTO & PC": "N/A",
+    "READING": None,
+    "KMS": None,
+    "DIESEL": None,
+    "DIESEL AMT":None,
+    "ADBLUE": None,
+    "MILEAGE": None,
+
+    "FREIGHT": "N/A",
+    "FRIEGHT AMT": 'N/A',
+    "DRIVER FRIEGHT": "N/A",
+    "DRIVER AMT": "N/A",
+    "BALANCE AMT": None
+}
+
+
+total_trip_details = {
+    'DATE': 'Total',
+    "FROM": None,
+    "TO": None,
+    "QTY": 0,
+    "ADVANCE": 0,
+    "LOADING": 0,
+    "UNLOADING": 0,
+    "TOLLGATE": 0,
+    "RTO & PC": 0,
+    "READING": None,
+    "KMS": 0,
+    "DIESEL": 0,
+    "DIESEL AMT":0,
+    "ADBLUE": 0,
+    "MILEAGE": 0,
+
+    "FREIGHT": 0,
+    "FRIEGHT AMT": 0,
+    "DRIVER FRIEGHT": 0,
+    "DRIVER AMT": 0,
+    "BALANCE AMT": 0,
+    "GST": 0
+}
+
+not_included_in_total = ['DATE','FROM', 'TO', 'READING']

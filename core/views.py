@@ -368,10 +368,14 @@ def truck_vitals(request):
                 'id', 
                 'vehicle_id', 
                 'trip_date', 
-                'balance_amount', 
+                'reading',
+                'kilometers',
+                'diesel',
                 'diesel_amount',
                 'ad_blue',
-                'reading'
+                'mileage',
+                'balance_amount', 
+                'no_of_trips'
             ).order_by('trip_date')
         )
         trip_ids = []
@@ -398,22 +402,11 @@ def truck_vitals(request):
         
         order_ids_associated_with_trip_ids = list(OrderToTripMapping.objects.filter(
             trip_id__in=trip_ids
-        ).values('order_id'))
+        ).values('trip_id', 'order_id'))
 
         order_ids = [order['order_id'] for order in order_ids_associated_with_trip_ids]
 
-        vitals_from_order = list(Order.objects.filter(id__in=order_ids, order_submit_status=True).values(
-            'date', 
-            'from_field',
-            'to',
-            'quantity', 
-            'freight_amount',
-            'loading',
-            'unloading',
-            'toll_gate',
-            'rto_pcl',
-            'driver_amount', 
-        ).order_by('date'))
+        all_orders = list(Order.objects.filter(id__in=order_ids, order_submit_status=True).values().order_by('date'))
         
         quantity = 0
         freight = 0
@@ -423,7 +416,8 @@ def truck_vitals(request):
         rto_pcl = 0
         driver_amount=0
         recent_deliveries = []
-        for order_detail in vitals_from_order:
+     
+        for order_detail in all_orders:
             print("order_detials date", order_detail['date'])
             quantity += order_detail['quantity']
             freight += order_detail['freight_amount'] if order_detail['freight_amount'] != None else 0
@@ -439,6 +433,7 @@ def truck_vitals(request):
                 'frieght': order_detail['freight_amount'],
                 'quantity': str(order_detail['quantity']) + " tons" 
             })
+       
         # print("vitals", vitals_from_trip, balance, maintanance, quantity, freight)
         
         vitals = vitals_data_config({
@@ -461,7 +456,11 @@ def truck_vitals(request):
             'Driver Amount': driver_amount
         })
 
-        return Response([vitals, recent_deliveries, total_expenses, total_maintenance], status=status.HTTP_200_OK)
+
+        all_trips = entire_trip_details_data_config(vitals_from_trip, order_ids_associated_with_trip_ids, all_orders)
+
+
+        return Response([vitals, recent_deliveries, total_expenses, total_maintenance, all_trips], status=status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
