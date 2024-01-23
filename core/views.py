@@ -201,9 +201,11 @@ def submit_trip(request):
 
         order_ids = [ order['order_id'] for order in get_order_ids ]
 
-        order_expenses_data = list(Order.objects.filter(id__in=order_ids).values('total_expenses', 'freight_amount', 'driver_amount')) 
+        order_expenses_data = list(Order.objects.filter(id__in=order_ids).values('total_expenses', 'freight_amount', 'driver_amount', 'gst_amount')) 
 
-        amount = multi_orders_expense_calculator(order_expenses_data)
+        amount, total_expense, gst_amount = multi_orders_expense_calculator(order_expenses_data)
+
+        print( "amount, total_expense, gst_amount", amount, total_expense, gst_amount)
 
         Trip.objects.filter(id=trip_body['tripId']).update(
             reading= int(trip_body['trip_data']['reading']),
@@ -213,13 +215,11 @@ def submit_trip(request):
             diesel_amount= float(trip_body['trip_data']['dieselAmount']),
             mileage= float(trip_body['trip_data']['mileage']),
             ad_blue= float(trip_body['trip_data']['adBlue']),
-            # maintanance= float(trip_body['trip_data']['maintanance']),
-            # balance_amount= amount - float(trip_body['trip_data']['dieselAmount']) - int(trip_body['trip_data']['adBlue']) - int(trip_body['trip_data']['maintanance']),
+            total_expenses = total_expense + float(trip_body['trip_data']['dieselAmount']) + float(trip_body['trip_data']['adBlue']),
             balance_amount= amount - float(trip_body['trip_data']['dieselAmount']) - int(trip_body['trip_data']['adBlue']),
+            balance_with_gst = amount - float(trip_body['trip_data']['dieselAmount']) - int(trip_body['trip_data']['adBlue']) + gst_amount,
             submit_status=True
         )
-
-        print("Balance amount", amount - float(trip_body['trip_data']['dieselAmount']) - int(trip_body['trip_data']['adBlue']))
 
         get_vehicle = list(Trip.objects.filter(id=trip_body['tripId']).values('vehicle_id'))
 
@@ -375,11 +375,15 @@ def truck_vitals(request):
                 'ad_blue',
                 'mileage',
                 'balance_amount', 
-                'no_of_trips'
+                'no_of_trips',
+                'total_expenses',
+                'balance_with_gst'
             ).order_by('trip_date')
         )
         trip_ids = []
         balance = 0
+        balance_with_gst = 0
+        total_expenses = 0
         diesel_amount = 0
         ad_blue = 0
         reading = 0
@@ -387,12 +391,13 @@ def truck_vitals(request):
         for trip in vitals_from_trip:
             trip_ids.append(trip['id'])
             balance += trip['balance_amount']
+            balance_with_gst += trip['balance_with_gst']
+            total_expenses += trip['total_expenses']
             diesel_amount += trip['diesel_amount']
             ad_blue += trip['ad_blue']
             reading = trip['reading']
 
         vehicle_instance = Vehicle.objects.get(registration_number=vehicle_id)
-        # print(str(start_date), type(start_date))
         maintenance = list(Maintenance.objects.filter(
             vehicle_id=vehicle_instance,
             maintenance_date__range=(start_date, end_date),
@@ -418,7 +423,6 @@ def truck_vitals(request):
         recent_deliveries = []
      
         for order_detail in all_orders:
-            print("order_detials date", order_detail['date'])
             quantity += order_detail['quantity']
             freight += order_detail['freight_amount'] if order_detail['freight_amount'] != None else 0
             loading += order_detail['loading']
@@ -456,9 +460,7 @@ def truck_vitals(request):
             'Driver Amount': driver_amount
         })
 
-
         all_trips = entire_trip_details_data_config(vitals_from_trip, order_ids_associated_with_trip_ids, all_orders)
-
 
         return Response([vitals, recent_deliveries, total_expenses, total_maintenance, all_trips], status=status.HTTP_200_OK)
     except Exception as e:
@@ -556,6 +558,7 @@ def chartData(request):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated]) 
 def maintenance_data(request):
     try:
         if request.method == "GET":
@@ -571,11 +574,7 @@ def maintenance_data(request):
         elif request.method == "POST":
             maintenance_body = request.data
 
-            print(maintenance_body)
-
             vehicle_instance = Vehicle.objects.get(registration_number=maintenance_body['vehicle_id'])
-
-            print("instance", vehicle_instance)
 
             service_name= Maintenance.objects.create(
                 vehicle_id= vehicle_instance,
@@ -595,4 +594,3 @@ def maintenance_data(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    

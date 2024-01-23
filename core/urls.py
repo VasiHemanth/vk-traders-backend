@@ -33,10 +33,12 @@ urlpatterns = [
     # Maintenance
     path('maintenance-data', views.maintenance_data, name='maintenance data'),
 
-
     # Truck Dashboard 
     path('all-trucks', views.all_trucks, name="get all trucks"),
     path('truck-vitals', views.truck_vitals, name="trucks vitals"),
     path('chart-data', views.chartData, name="Chart data"),
 
+    # Generate API's
+    # path('generate-expenses', views.generateTotalExpensesAndBalanceWithGST, name="total expenses balance with gst"),
+    # path('generate-gst', views.generateGSTInOrders, name="Generate GST in orders")
 ]

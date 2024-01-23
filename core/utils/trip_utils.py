@@ -10,12 +10,15 @@ def convert_date_time_string_to_datetime(date_string):
 
 def multi_orders_expense_calculator(order_expense):
     amount = 0
+    total_expense = 0
+    gst_amount = 0
     for expense in order_expense:
         each_order_expense = expense['freight_amount'] - expense['total_expenses'] - expense['driver_amount'] 
         amount += each_order_expense
+        total_expense += expense['total_expenses']
+        gst_amount += expense['gst_amount']
 
-    print("amount", amount)
-    return amount
+    return amount, total_expense, gst_amount
 
 def trip_data_config(trip_data):
     trip_metrics = copy.deepcopy(trip_metrics_config)
@@ -23,7 +26,6 @@ def trip_data_config(trip_data):
         for key, value in trip_data.items():
             if key in trip_metrics_key:
                 index = trip_metrics_key.index(key)
-                # print("index", key, value, index)
                 if value != None:
                     if key in ['kilometers', 'diesel','mileage']:
                         trip_metrics[index]["value"] = value
@@ -124,12 +126,17 @@ def maintenance_data_config(services):
         
 
 def entire_trip_details_data_config(trips, order_to_trips, orders):
+
     all_trips = {
         'column_names': entire_trip_column_names,
         'column_values': [],
         'row_span': [],
         'total': {},
     }
+    
+    if len(trips) == 0 and len(order_to_trips) == 0 and len(orders) == 0:
+        all_trips['column_values'].append(each_trip_details)
+        return all_trips
         
     trip_totals = copy.deepcopy(total_trip_details)
     for order in orders:
@@ -148,16 +155,22 @@ def entire_trip_details_data_config(trips, order_to_trips, orders):
                             trip_totals['DIESEL'] += trip['diesel']
                             
                             trip_detail['DIESEL AMT'] = trip['diesel_amount']
-                            trip_totals['DIESEL AMT'] += trip['diesel_amount']
+                            trip_totals['DIESEL AMT'] += round(trip['diesel_amount'])
+                            
+                            trip_detail['ADBLUE'] = trip['ad_blue']
+                            trip_totals['ADBLUE'] += trip['ad_blue']
                             
                             trip_detail['MILEAGE'] = trip['mileage']
                             trip_totals['MILEAGE'] += trip['mileage']
 
-                            trip_detail['ADBLUE'] = trip['ad_blue']
-                            trip_totals['ADBLUE'] += trip['ad_blue']
+                            trip_detail['TOTAL EXPENSES'] = trip['total_expenses']
+                            trip_totals['TOTAL EXPENSES'] += round(trip['total_expenses'], 2)
 
                             trip_detail['BALANCE AMT'] = trip['balance_amount']
                             trip_totals['BALANCE AMT'] += trip['balance_amount']
+
+                            trip_detail['BALANCE AMT (+GST)'] = trip['balance_with_gst']
+                            trip_totals['BALANCE AMT (+GST)'] += round(trip['balance_with_gst'] , 2)      
 
                             all_trips['row_span'].append(trip['no_of_trips'])
                         else:
@@ -169,7 +182,7 @@ def entire_trip_details_data_config(trips, order_to_trips, orders):
         trip_detail['TO'] = order['to']
 
         trip_detail['QTY'] = order['quantity']
-        trip_totals['QTY'] += order['quantity']
+        trip_totals['QTY'] += round(order['quantity'], 3)
 
         trip_detail['ADVANCE'] = order['advance']
         trip_totals['ADVANCE'] += int(order['advance'])
@@ -193,23 +206,19 @@ def entire_trip_details_data_config(trips, order_to_trips, orders):
         trip_totals['FRIEGHT AMT'] += order['freight_amount']
 
         trip_detail['DRIVER FRIEGHT'] = order['driver_freight']
-        trip_totals['DRIVER FRIEGHT'] += order['driver_freight']
+        trip_totals['DRIVER FRIEGHT'] += round(order['driver_freight'], 2)
 
         trip_detail['DRIVER AMT'] = order['driver_amount']
         trip_totals['DRIVER AMT'] += order['driver_amount']
 
-        trip_detail['GST'] = order['gst_amount']
-        trip_totals['GST'] += order['gst_amount']
+        trip_detail['GST AMT'] = order['gst_amount']
+        trip_totals['GST AMT'] += order['gst_amount']
 
         all_trips['column_values'].append(trip_detail)                    
 
-    print('entire trips', all_trips['column_values'])
-
-    trip_totals['FREIGHT'] = trip_totals['FREIGHT'] / len(all_trips['column_values'])
+    trip_totals['FREIGHT'] = round(trip_totals['FREIGHT'] / len(all_trips['column_values']))
     trip_totals['DRIVER FRIEGHT'] = trip_totals['DRIVER FRIEGHT'] / len(all_trips['column_values'])
-    trip_totals['MILEAGE'] = trip_totals['MILEAGE'] / len(trips)
-
-    print("trip totals", trip_totals)
+    trip_totals['MILEAGE'] = round(trip_totals['MILEAGE'] / len(trips), 2)
 
     all_trips['total'] = trip_totals
 
