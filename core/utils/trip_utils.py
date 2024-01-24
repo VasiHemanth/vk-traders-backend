@@ -1,8 +1,7 @@
 from datetime import datetime
-import calendar
 import copy
 from .config import *
-from .helper import number_with_commas
+from .helper import number_with_commas, calculate_percentage_increase
 
 def convert_date_time_string_to_datetime(date_string):
     date_format = "%Y-%m-%dT%H:%M"
@@ -60,15 +59,24 @@ def order_data_config(order_data):
 def vitals_data_config(vitals):
     vitals_config = copy.deepcopy(vital_detials_config)
     for vital in vitals_config:
+        print("vitals...",  )
         # print(vital['title'], vitals[vital['title']])
-        if vitals[vital['title']] != None:
-            vital['value']=vitals[vital['title']]
+        data = vitals[vital['title']]
+        if data[0] != None:
+            vital['value']=data[0]
 
             if vital['title'] == 'Frieght Amount':
                 if vital['value'] > 400000 and vital['value'] < 500000:
                     vital['color'] = 'yellow'
                 elif vital['value'] < 400000:
                     vital['color'] = 'red'
+
+            if vital['title'] in calculate_percentage:
+                percentage_increase = calculate_percentage_increase(vitals[vital['title']][0], vitals[vital['title']][1])   
+                if percentage_increase == float('inf'):
+                    vital['description'] = "missing data"
+                else: 
+                    vital['description'] = f"{percentage_increase:.2f}% from last month"
 
     return vitals_config
 
@@ -111,17 +119,21 @@ def maintenance_config(maintenance):
     }
 
 
-def maintenance_data_config(services):
+def maintenance_data_config(services, current=True):
     maintenance = []
     total_maintenance = 0
     for service in services:
-        maintenance.append({
-            'label': service['maintenance_name'],
-            'value': service['charges']
-        })
+        if current:
+            maintenance.append({
+                'label': service['maintenance_name'],
+                'value': service['charges']
+            })
         total_maintenance += service['charges']
 
-    return total_maintenance, maintenance
+    if current:
+        return total_maintenance, maintenance
+    else:
+        return total_maintenance
         
         
 

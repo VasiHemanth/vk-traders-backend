@@ -1,5 +1,5 @@
 
-trip_metrics_key = ['reading', 'kilometers', 'diesel', 'diesel_amount', 'ad_blue', 'maintenance', 'mileage', 'balance_amount']
+trip_metrics_key = ['reading', 'kilometers', 'diesel', 'diesel_amount', 'ad_blue', 'mileage', 'balance_amount']
 
 trip_metrics_config = [
     {
@@ -21,10 +21,6 @@ trip_metrics_config = [
     {
         "label": "AdBlue",
         "value": "N/A"
-    },
-    {
-        "label": "Maintenance",
-        "value": "N/A" 
     },
     {
         "label": "Mileage",
@@ -146,6 +142,8 @@ total_expenditure_config = [
     },
     { "label": "Driver Amount", "value": "N/A" },
 ]
+
+calculate_percentage = ['Frieght Amount', 'Total Expenditure', 'Maintenance', 'Quantity']
 
 entire_trip_column_names =['DATE', 'FROM', 'TO', 'QTY', 'ADVANCE', 'LOADING', 'UNLOADING', 
     'RTO & PC', 'TOLLGATE', 'READING', 'KMS', 'DIESEL', 'DIESEL AMT', 'ADBLUE',

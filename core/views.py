@@ -13,7 +13,7 @@ from .models import *
 from .serializers import * 
 
 from .utils.trip_utils import *
-from .utils.helper import get_monthYear_range, get_last_six_monthYear, get_strp_time
+from .utils.helper import get_start_and_end_date,get_monthYear_range, get_last_six_monthYear, get_strp_time
 # Vercel static files
 from datetime import datetime
 from django.http import HttpResponse
@@ -360,10 +360,10 @@ def truck_vitals(request):
     vehicle_id = request.GET.get('truck_id')
     monthYear = request.GET.get('monthYear')
     try:
-        start_date, end_date = get_monthYear_range(monthYear)
+        current_start_date, current_end_date, previous_start_date, previous_end_date = get_monthYear_range(monthYear)
         vitals_from_trip = list(Trip.objects.filter(
             vehicle_id=vehicle_id, 
-            trip_date__range=(start_date, end_date),
+            trip_date__range=(current_start_date, current_end_date),
             submit_status=True).values(
                 'id', 
                 'vehicle_id', 
@@ -400,11 +400,20 @@ def truck_vitals(request):
         vehicle_instance = Vehicle.objects.get(registration_number=vehicle_id)
         maintenance = list(Maintenance.objects.filter(
             vehicle_id=vehicle_instance,
-            maintenance_date__range=(start_date, end_date),
+            maintenance_date__range=(current_start_date, current_end_date),
         ).values( 'maintenance_name', 'charges'))
+
+        prev_maintenance = list(Maintenance.objects.filter(
+            vehicle_id=vehicle_instance,
+            maintenance_date__range=(previous_start_date, previous_end_date),
+        ).values('charges'))
 
         maintenance_charges, total_maintenance = maintenance_data_config(maintenance)
         
+        prev_maintenance_charges = maintenance_data_config(prev_maintenance, False)
+
+        print("prev maintenance", prev_maintenance_charges)
+
         order_ids_associated_with_trip_ids = list(OrderToTripMapping.objects.filter(
             trip_id__in=trip_ids
         ).values('trip_id', 'order_id'))
@@ -441,13 +450,13 @@ def truck_vitals(request):
         # print("vitals", vitals_from_trip, balance, maintanance, quantity, freight)
         
         vitals = vitals_data_config({
-            'Frieght Amount':freight,
-            'Total Expenditure': loading + unloading + toll_gate + rto_pcl + diesel_amount + ad_blue + driver_amount, 
-            'EMI': None,
-            'Kilometers': reading,
-            'Maintenance': maintenance_charges,
-            'Quantity': quantity,
-            'Balance': balance - maintenance_charges,
+            'Frieght Amount':[freight, 0],
+            'Total Expenditure': [loading + unloading + toll_gate + rto_pcl + diesel_amount + ad_blue + driver_amount, 0], 
+            'EMI': [None, None],
+            'Kilometers': [reading, None],
+            'Maintenance': [maintenance_charges, prev_maintenance_charges],
+            'Quantity': [quantity, 0],
+            'Balance': [balance - maintenance_charges, None]
         })
         # print("vitals", vitals)
         total_expenses = expenses_data_config({
@@ -480,7 +489,7 @@ def chartData(request):
         values= []
 
         for month_year in get_six_months:
-            start_date, end_date = get_monthYear_range(month_year)
+            current_start_date, current_end_date = get_start_and_end_date(month_year)
 
             if source != "quantity":
                 labels.append(get_strp_time(month_year)) 
@@ -489,7 +498,7 @@ def chartData(request):
                 vehicle_instance = Vehicle.objects.get(registration_number=vehicle_id)
                 maintenance = list(Maintenance.objects.filter(
                     vehicle_id=vehicle_instance,
-                    maintenance_date__range=(start_date, end_date),
+                    maintenance_date__range=(current_start_date, current_end_date),
                 ).values( 'maintenance_name', 'charges'))
                 
                 maintenance_charges = 0
@@ -499,7 +508,7 @@ def chartData(request):
                 if source == "balance_amount":
                     source_data = list(Trip.objects.filter(
                         vehicle_id=vehicle_id,
-                        trip_date__range=(start_date, end_date),
+                        trip_date__range=(current_start_date, current_end_date),
                         submit_status=True).values(
                             'id', 
                             'balance_amount'                 
@@ -518,7 +527,7 @@ def chartData(request):
                 trip_ids = []
                 source_data = list(Trip.objects.filter(
                     vehicle_id=vehicle_id,
-                    trip_date__range=(start_date, end_date),
+                    trip_date__range=(current_start_date, current_end_date),
                     submit_status=True).values(
                         'id',                  
                     ).order_by('trip_date')
