@@ -59,8 +59,6 @@ def order_data_config(order_data):
 def vitals_data_config(vitals):
     vitals_config = copy.deepcopy(vital_detials_config)
     for vital in vitals_config:
-        print("vitals...",  )
-        # print(vital['title'], vitals[vital['title']])
         data = vitals[vital['title']]
         if data[0] != None:
             vital['value']=data[0]
@@ -74,9 +72,13 @@ def vitals_data_config(vitals):
             if vital['title'] in calculate_percentage:
                 percentage_increase = calculate_percentage_increase(vitals[vital['title']][0], vitals[vital['title']][1])   
                 if percentage_increase == float('inf'):
-                    vital['description'] = "missing data"
+                    vital['description'] = "missing data."
                 else: 
                     vital['description'] = f"{percentage_increase:.2f}% from last month"
+
+            if vital["title"] == 'Balance':
+                vital['description'] = vitals['Balance_GST']
+
 
     return vitals_config
 

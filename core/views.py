@@ -397,23 +397,6 @@ def truck_vitals(request):
             ad_blue += trip['ad_blue']
             reading = trip['reading']
 
-        vehicle_instance = Vehicle.objects.get(registration_number=vehicle_id)
-        maintenance = list(Maintenance.objects.filter(
-            vehicle_id=vehicle_instance,
-            maintenance_date__range=(current_start_date, current_end_date),
-        ).values( 'maintenance_name', 'charges'))
-
-        prev_maintenance = list(Maintenance.objects.filter(
-            vehicle_id=vehicle_instance,
-            maintenance_date__range=(previous_start_date, previous_end_date),
-        ).values('charges'))
-
-        maintenance_charges, total_maintenance = maintenance_data_config(maintenance)
-        
-        prev_maintenance_charges = maintenance_data_config(prev_maintenance, False)
-
-        print("prev maintenance", prev_maintenance_charges)
-
         order_ids_associated_with_trip_ids = list(OrderToTripMapping.objects.filter(
             trip_id__in=trip_ids
         ).values('trip_id', 'order_id'))
@@ -440,23 +423,80 @@ def truck_vitals(request):
             rto_pcl += order_detail['rto_pcl']
             driver_amount += order_detail['driver_amount']
             recent_deliveries.append({
-                'order_date': order_detail['date'],
+                'order_date': order_detail['date'].date(),
                 'from': order_detail['from_field'],
                 'to': order_detail['to'],
                 'frieght': order_detail['freight_amount'],
                 'quantity': str(order_detail['quantity']) + " tons" 
             })
        
+        vehicle_instance = Vehicle.objects.get(registration_number=vehicle_id)
+        maintenance = list(Maintenance.objects.filter(
+            vehicle_id=vehicle_instance,
+            maintenance_date__range=(current_start_date, current_end_date),
+        ).values( 'maintenance_name', 'charges'))
+
+        maintenance_charges, total_maintenance = maintenance_data_config(maintenance)
+
+        vitals_for_prev_trip = list(Trip.objects.filter(
+            vehicle_id=vehicle_id, 
+            trip_date__range=(previous_start_date, previous_end_date),
+            submit_status=True).values(
+                'id', 
+                'total_expenses',
+                'balance_amount', 
+                'balance_with_gst'
+            ).order_by('trip_date')
+        )
+
+        prev_trip_ids = []
+        prev_balance = 0
+        prev_balance_with_gst = 0
+        prev_total_expenses = 0
+
+        for prev_trip in vitals_for_prev_trip:
+            prev_trip_ids.append(prev_trip['id'])
+            prev_balance += prev_trip['balance_amount']
+            prev_balance_with_gst += prev_trip['balance_with_gst']
+            prev_total_expenses += prev_trip['total_expenses']
+
+        prev_order_ids_associated_with_trip_ids = list(OrderToTripMapping.objects.filter(
+            trip_id__in=prev_trip_ids
+        ).values('trip_id', 'order_id'))
+
+        prev_order_ids = [order['order_id'] for order in prev_order_ids_associated_with_trip_ids]
+
+        prev_all_orders = list(Order.objects.filter(id__in=prev_order_ids, order_submit_status=True).values(
+            'quantity', 'freight_amount', 'driver_amount'
+        ).order_by('date'))
+        
+        prev_quantity = 0
+        prev_freight = 0
+        prev_driver_amount=0
+     
+        for prev_order_detail in prev_all_orders:
+            prev_quantity += prev_order_detail['quantity']
+            prev_freight += prev_order_detail['freight_amount'] if prev_order_detail['freight_amount'] != None else 0
+            prev_driver_amount += prev_order_detail['driver_amount']
+            
+        prev_maintenance = list(Maintenance.objects.filter(
+            vehicle_id=vehicle_instance,
+            maintenance_date__range=(previous_start_date, previous_end_date),
+        ).values('charges'))
+        
+        prev_maintenance_charges = maintenance_data_config(prev_maintenance, False)
+
         # print("vitals", vitals_from_trip, balance, maintanance, quantity, freight)
         
         vitals = vitals_data_config({
-            'Frieght Amount':[freight, 0],
-            'Total Expenditure': [loading + unloading + toll_gate + rto_pcl + diesel_amount + ad_blue + driver_amount, 0], 
+            'Frieght Amount':[freight, prev_freight],
+            'Total Expenditure': [total_expenses + driver_amount, prev_total_expenses + prev_driver_amount], 
             'EMI': [None, None],
             'Kilometers': [reading, None],
             'Maintenance': [maintenance_charges, prev_maintenance_charges],
-            'Quantity': [quantity, 0],
-            'Balance': [balance - maintenance_charges, None]
+            'Quantity': [quantity, prev_quantity],
+            'Balance': [balance - maintenance_charges, 0],
+            'Balance_GST': balance_with_gst - maintenance_charges
         })
         # print("vitals", vitals)
         total_expenses = expenses_data_config({
@@ -517,7 +557,7 @@ def chartData(request):
 
                     column_value = 0
                     for src_data in source_data:
-                        column_value += src_data['balance_amount' ]
+                        column_value += src_data['balance_amount']
     
                     values.append(column_value - maintenance_charges)
                 elif source == "maintenance":
