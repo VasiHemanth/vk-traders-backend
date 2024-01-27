@@ -95,10 +95,16 @@ def get_vehicle_data(request):
 @permission_classes([IsAuthenticated])
 def search(request):
     search_string = request.GET.get('search-string')
+
+    print("search string", search_string)
+
     try:
         vehicles = list(Vehicle.objects.filter(registration_number__contains=search_string).values(
-            'id', 'registration_number', 'company', 'driver_name', 'status'
-            ))
+            'registration_number', 'company', 'driver_name', 'status'
+        ))
+        
+        print("vehicles", vehicles)
+
         return Response(vehicles, status=status.HTTP_200_OK)
     except Exception as e: 
         return Response({"error": e}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -431,6 +437,7 @@ def truck_vitals(request):
             })
        
         vehicle_instance = Vehicle.objects.get(registration_number=vehicle_id)
+        print("vehicle instance", vehicle_instance.next_service_km_due)
         maintenance = list(Maintenance.objects.filter(
             vehicle_id=vehicle_instance,
             maintenance_date__range=(current_start_date, current_end_date),
@@ -487,12 +494,12 @@ def truck_vitals(request):
         prev_maintenance_charges = maintenance_data_config(prev_maintenance, False)
 
         # print("vitals", vitals_from_trip, balance, maintanance, quantity, freight)
-        
+
         vitals = vitals_data_config({
             'Frieght Amount':[freight, prev_freight],
             'Total Expenditure': [total_expenses + driver_amount, prev_total_expenses + prev_driver_amount], 
             'EMI': [None, None],
-            'Kilometers': [reading, None],
+            'Kilometers': [reading, vehicle_instance.next_service_km_due],
             'Maintenance': [maintenance_charges, prev_maintenance_charges],
             'Quantity': [quantity, prev_quantity],
             'Balance': [balance - maintenance_charges, 0],

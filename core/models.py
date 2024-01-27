@@ -240,6 +240,7 @@ class Vehicle(models.Model):
     deleted_at = models.DateTimeField(blank=True, null=True)
     driver_name = models.CharField(blank=True, null=True)
     rc = models.DateField(blank=True, null=True, db_comment='RC expire date')
+    next_service_km_due = models.IntegerField(blank=False, default=0, db_comment='How many kilometers are remaining for next service due?')
 
     class Meta:
         db_table = 'vehicle'

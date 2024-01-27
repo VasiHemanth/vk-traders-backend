@@ -79,6 +79,9 @@ def vitals_data_config(vitals):
             if vital["title"] == 'Balance':
                 vital['description'] = vitals['Balance_GST']
 
+            if vital['title'] == 'Kilometers':
+                vital['description'] = f"{number_with_commas(vitals[vital['title']][1], False)} kms remaining"
+
 
     return vitals_config
 
