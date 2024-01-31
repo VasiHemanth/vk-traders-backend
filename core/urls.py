@@ -33,6 +33,9 @@ urlpatterns = [
     # Maintenance
     path('maintenance-data', views.maintenance_data, name='maintenance data'),
 
+    # EMI
+    path('emi-data', views.emi_data, name='emi data'),
+
     # Truck Dashboard 
     path('all-trucks', views.all_trucks, name="get all trucks"),
     path('truck-vitals', views.truck_vitals, name="trucks vitals"),

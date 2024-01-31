@@ -81,11 +81,19 @@ def all_vehicles(request):
 def get_vehicle_data(request):
     vehicle_id = request.GET.get('vehicleId')
 
+    get_current_monthYear = datetime.now()
+
+    current_month = get_current_monthYear.strftime('%m')
+    current_year = get_current_monthYear.strftime('%Y')
+
+    month_year = request.GET.get('monthYear', f'{current_year}-{current_month}')
+    print(month_year)
     try:
         vehicle_details = Vehicle.objects.get(registration_number=vehicle_id)
         serializer = VehicleSerializer(vehicle_details)
-        trip_dates = list(Trip.objects.filter(vehicle_id=vehicle_id).values('id', 'trip_date', 'no_of_trips', 'submit_status').order_by('trip_date'))
-        return Response({"vehicle_details": serializer.data, 'trip_dates':trip_dates}, status=status.HTTP_200_OK)
+        start_date, end_date = get_start_and_end_date(month_year)
+        trip_dates = list(Trip.objects.filter(vehicle_id=vehicle_id, trip_date__range=(start_date, end_date)).values('id', 'trip_date', 'no_of_trips', 'submit_status').order_by('trip_date'))
+        return Response({"month_year": month_year, "vehicle_details": serializer.data, 'trip_dates':trip_dates}, status=status.HTTP_200_OK)
     except Exception as e:
         print(e)
         return Response({"error": e}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -437,7 +445,6 @@ def truck_vitals(request):
             })
        
         vehicle_instance = Vehicle.objects.get(registration_number=vehicle_id)
-        print("vehicle instance", vehicle_instance.next_service_km_due)
         maintenance = list(Maintenance.objects.filter(
             vehicle_id=vehicle_instance,
             maintenance_date__range=(current_start_date, current_end_date),
@@ -493,17 +500,33 @@ def truck_vitals(request):
         
         prev_maintenance_charges = maintenance_data_config(prev_maintenance, False)
 
-        # print("vitals", vitals_from_trip, balance, maintanance, quantity, freight)
+        emi_data = list(Emi.objects.filter(
+            vehicle_id=vehicle_instance,
+            emi_date__range=(current_start_date ,current_end_date)
+        ).values('emi_type', 'emi_amount'))
+
+        print('emi data', emi_data)
+
+        emi_count = Emi.objects.filter(
+            vehicle_id=vehicle_instance,
+            emi_type = 'truck'
+        ).count()
+       
+        emi_amount = 0
+        for emi in emi_data:
+            emi_amount += emi['emi_amount']
+
+        # print('emi amount', emi_amount)
 
         vitals = vitals_data_config({
             'Frieght Amount':[freight, prev_freight],
             'Total Expenditure': [total_expenses + driver_amount, prev_total_expenses + prev_driver_amount], 
-            'EMI': [None, None],
+            'EMI': [emi_amount, vehicle_instance.emis_tenure - emi_count],
             'Kilometers': [reading, vehicle_instance.next_service_km_due],
             'Maintenance': [maintenance_charges, prev_maintenance_charges],
             'Quantity': [quantity, prev_quantity],
-            'Balance': [balance - maintenance_charges, 0],
-            'Balance_GST': balance_with_gst - maintenance_charges
+            'Balance': [balance - maintenance_charges - emi_amount, 0],
+            'Balance_GST': balance_with_gst - maintenance_charges - emi_amount
         })
         # print("vitals", vitals)
         total_expenses = expenses_data_config({
@@ -650,3 +673,41 @@ def maintenance_data(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated]) 
+def emi_data(request):
+    try:
+        if request.method == 'GET':
+            vehicle_id = request.GET.get('vehicle_id')
+
+            vehicle_instance = Vehicle.objects.get(registration_number=vehicle_id)
+
+            emi_data = list(Emi.objects.filter(vehicle_id=vehicle_instance).values('emi_date', 'emi_amount', 'emi_type').order_by('-emi_date'))
+
+            emi_response = emi_config(emi_data)
+            
+            return Response(emi_response, status=status.HTTP_200_OK)
+    
+        elif request.method == 'POST':
+            emi_body = request.data
+
+            vehicle_instance = Vehicle.objects.get(registration_number=emi_body['vehicle_id'])
+
+            insert_emi = Emi.objects.create(
+                vehicle_id = vehicle_instance,
+                emi_date = emi_body['emi_date'],
+                emi_type = emi_body['emi_type'],
+                emi_amount = emi_body['emi_amount']
+            )
+
+            return_response = {}
+            if insert_emi.id:
+                return_response['id'] = insert_emi.id
+                return_response['message'] = 'New EMI record added'
+
+            return Response(return_response, status=status.HTTP_200_OK)
+
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

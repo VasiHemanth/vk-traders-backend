@@ -76,12 +76,15 @@ def vitals_data_config(vitals):
                 else: 
                     vital['description'] = f"{percentage_increase:.2f}% from last month"
 
-            if vital["title"] == 'Balance':
-                vital['description'] = vitals['Balance_GST']
+            else:
+                if vital["title"] == 'Balance':
+                    vital['description'] = vitals['Balance_GST']
 
-            if vital['title'] == 'Kilometers':
-                vital['description'] = f"{number_with_commas(vitals[vital['title']][1], False)} kms remaining"
+                if vital['title'] == 'Kilometers':
+                    vital['description'] = f"{number_with_commas(vitals[vital['title']][1], False)} kms remaining"
 
+                if vital['title'] == 'EMI':
+                    vital['description'] = f"{vitals[vital['title']][1]} Emi's are remaining"
 
     return vitals_config
 
@@ -156,8 +159,12 @@ def entire_trip_details_data_config(trips, order_to_trips, orders):
         return all_trips
         
     trip_totals = copy.deepcopy(total_trip_details)
+
+    orders_count = 0
+
     for order in orders:
         trip_detail = copy.deepcopy(each_trip_details)
+        orders_count += 1
         for trip_order in order_to_trips:
             if str(order['id']) == trip_order['order_id']:
                 for trip in trips:
@@ -195,6 +202,7 @@ def entire_trip_details_data_config(trips, order_to_trips, orders):
 
                         trip_detail['DATE'] = order['date'].date()
                         # print("excuted trip_detail", trip_detail)
+        trip_detail['S.No.'] = orders_count
         trip_detail['FROM'] = order['from_field']
         trip_detail['TO'] = order['to']
 
@@ -239,5 +247,22 @@ def entire_trip_details_data_config(trips, order_to_trips, orders):
 
     all_trips['total'] = trip_totals
 
-
     return all_trips
+
+def emi_config(emi_data):
+    emi_response = {
+        'column_names': emi_column_names,
+        'column_values': [],
+    }
+
+    for i, emi in enumerate(emi_data):
+        emi_detail = copy.deepcopy(emi_details)
+        emi_detail['S.No.'] = i+1
+        emi_detail['DATE'] = emi['emi_date']
+        emi_detail['AMOUNT'] = emi['emi_amount']
+        emi_detail['EMI TYPE'] = emi['emi_type']
+
+        emi_response['column_values'].append(emi_detail)
+
+
+    return emi_response

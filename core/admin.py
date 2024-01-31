@@ -15,6 +15,7 @@ class CustomUserAdmin(admin.ModelAdmin):
     list_display = ['user', 'role']
 
 
+
 admin.site.register(Vehicle, VehicleAdmin)
 admin.site.register(Role, RoleAdmin)
 admin.site.register(CustomUser, CustomUserAdmin)

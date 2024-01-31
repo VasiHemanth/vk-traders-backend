@@ -72,58 +72,58 @@ order_details_config = [
 
 vital_detials_config = [
     {
-    "title": "Frieght Amount",
-    "value": "",
-    "description": "",
-    "icon": "/rupees.svg",
-    "details": False,
-    "color": "",
+        "title": "Frieght Amount",
+        "value": "",
+        "description": "",
+        "icon": "/rupees.svg",
+        "details": False,
+        "color": "",
     },
     {
-    "title": "Total Expenditure",
-    "value": "",
-    "description": "",
-    "icon": "/total-expenses.svg",
-    "details": True,
-    "color": "",
+        "title": "Total Expenditure",
+        "value": "",
+        "description": "",
+        "icon": "/total-expenses.svg",
+        "details": True,
+        "color": "",
     },
     {
-    "title": "EMI",
-    "value": "",
-    "description": "",
-    "icon": "/loan.svg",
-    "details": False,
-    "color": "",
+        "title": "EMI",
+        "value": "",
+        "description": "",
+        "icon": "/loan.svg",
+        "details": False,
+        "color": "",
     },
     {
-    "title": "Kilometers",
-    "value": "",
-    "description": "",
-    "icon": "/kilometers.svg",
-    "details": False
+        "title": "Kilometers",
+        "value": "",
+        "description": "",
+        "icon": "/kilometers.svg",
+        "details": False
     },
     {
-    "title": "Maintenance",
-    "value": "",
-    "description": "",
-    "icon": "/maintenance.svg",
-    "details": True,
-    "color": "",
+        "title": "Maintenance",
+        "value": "",
+        "description": "",
+        "icon": "/maintenance.svg",
+        "details": True,
+        "color": "",
     },{
-    "title": "Quantity",
-    "value": "",
-    "description": "",
-    "icon": "/quantity.svg",
-    "details": False,
-    "color": "",
+        "title": "Quantity",
+        "value": "",
+        "description": "",
+        "icon": "/quantity.svg",
+        "details": False,
+        "color": "",
     },
     {
-    "title": "Balance",
-    "value": "",
-    "description": "",
-    "icon": "/balance.svg",
-    "details": False,
-    "color": "",
+        "title": "Balance",
+        "value": "",
+        "description": "",
+        "icon": "/balance.svg",
+        "details": False,
+        "color": "",
     },
 ]
 
@@ -145,13 +145,14 @@ total_expenditure_config = [
 
 calculate_percentage = ['Frieght Amount', 'Total Expenditure', 'Maintenance', 'Quantity']
 
-entire_trip_column_names =['DATE', 'FROM', 'TO', 'QTY', 'ADVANCE', 'LOADING', 'UNLOADING', 
+entire_trip_column_names =['S.No.', 'DATE', 'FROM', 'TO', 'QTY', 'ADVANCE', 'LOADING', 'UNLOADING', 
     'RTO & PC', 'TOLLGATE', 'READING', 'KMS', 'DIESEL', 'DIESEL AMT', 'ADBLUE',
      'TOTAL EXPENSES', 'MILEAGE', 'FREIGHT', 'FRIEGHT AMT','DRIVER FRIEGHT', 'DRIVER AMT',
     'BALANCE AMT', 'GST AMT', 'BALANCE AMT (+GST)'
 ]
 
 each_trip_details = {
+    'S.No.': 0,
     'DATE': 'N/A',
     "FROM": "N/A",
     "TO": "N/A",
@@ -178,7 +179,8 @@ each_trip_details = {
 }
 
 total_trip_details = {
-    'DATE': 'Total',
+    'S.No.': 'Total',
+    'DATE': None,
     "FROM": None,
     "TO": None,
     "QTY": 0,
@@ -204,3 +206,12 @@ total_trip_details = {
 }
 
 not_included_in_total = ['DATE','FROM', 'TO', 'READING']
+
+emi_column_names = ['S.No.', 'DATE', 'AMOUNT', 'EMI TYPE']
+
+emi_details = {
+    'S.No.': 0,
+    'DATE': 'N/A',
+    'AMOUNT': 0,
+    'EMI TYPE': 'N/A'
+}

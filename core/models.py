@@ -241,6 +241,7 @@ class Vehicle(models.Model):
     driver_name = models.CharField(blank=True, null=True)
     rc = models.DateField(blank=True, null=True, db_comment='RC expire date')
     next_service_km_due = models.IntegerField(blank=False, default=0, db_comment='How many kilometers are remaining for next service due?')
+    emis_tenure = models.IntegerField(blank=False, default=0, db_comment="Total No. of Months EMI is taken for")
 
     class Meta:
         db_table = 'vehicle'
@@ -256,4 +257,23 @@ class Maintenance(models.Model):
 
     class Meta:
         db_table = 'maintenance'
+
+class Emi(models.Model):
+    DROPDOWN_CHOICES = [
+        ('truck', 'truck'),
+        ('loan', 'loan')
+    ]
+    id = models.BigAutoField(primary_key=True)
+    vehicle_id = models.ForeignKey('Vehicle', models.DO_NOTHING)
+    emi_date = models.DateField(blank=False, null=False, db_comment='EMI paid date or EMI submitted date')
+    emi_type = models.CharField(
+        max_length=5,
+        choices=DROPDOWN_CHOICES,
+        default='truck',
+        verbose_name='EMI type'
+    )
+    emi_amount = models.FloatField(blank=False, null=False)
+
+    class Meta:
+        db_table = 'emi'
 
