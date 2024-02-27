@@ -15,7 +15,7 @@ from .serializers import *
 from .utils.trip_utils import *
 from .utils.helper import get_start_and_end_date,get_monthYear_range, get_last_six_monthYear, get_strp_time
 # Vercel static files
-from datetime import datetime
+from datetime import datetime, date
 from django.http import HttpResponse
 
 def index(request):
@@ -500,9 +500,11 @@ def truck_vitals(request):
         
         prev_maintenance_charges = maintenance_data_config(prev_maintenance, False)
 
+        sample_emi_start_date = date(2015, 1, 1)
+
         emi_data = list(Emi.objects.filter(
             vehicle_id=vehicle_instance,
-            emi_date__range=(current_start_date ,current_end_date)
+            emi_date__range=(sample_emi_start_date ,current_end_date)
         ).values('emi_type', 'emi_amount'))
 
         print('emi data', emi_data)
