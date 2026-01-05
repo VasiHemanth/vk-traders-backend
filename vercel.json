@@ -1,14 +1,8 @@
 {
-    "builds": [
-      {
-        "src": "vk_traders_backend/wsgi.py",
-        "use": "@vercel/python"
-      }
-    ],
-    "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "vk_traders_backend/wsgi.py"
-      }
-    ]
-  }
+  "routes": [
+    {
+      "src": "/(.+)",
+      "dest": "vk_traders_backend/wsgi.py"
+    }
+  ]
+}
