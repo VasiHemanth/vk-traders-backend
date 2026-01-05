@@ -1,7 +1,13 @@
 {
+  "builds": [
+    {
+      "src": "manage.py",
+      "use": "@vercel/python"
+    }
+  ],
   "routes": [
     {
-      "src": "/(.+)",
+      "src": "/(.*)",
       "dest": "vk_traders_backend/wsgi.py"
     }
   ]
